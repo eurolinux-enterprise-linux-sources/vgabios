@@ -1,6 +1,6 @@
 Name:		vgabios
 Version:	0.6b
-Release:	3.7%{?dist}
+Release:	3.8%{?dist}
 Summary:	LGPL implementation of a vga video bios
 
 Group:		Applications/Emulators		
@@ -40,6 +40,8 @@ Patch10: vgabios-Add-qemu-qxl-vga-pci-bios.patch
 Patch11: vgabios-add-DPMS-support-to-cirrus-vgabios.patch
 # For bz#840087 - Unable to boot rhev-hypervisor6.iso in virtual machine for testing.
 Patch12: vgabios-Fix-get-video-mode-vgabios-call.patch
+# For bz#1421574 - [virtio-win][svvp][ws2016] cannot generate dump file when using nmi on ws2016
+Patch13: vgabios-Reorder-video-modes-to-work-around-a-Windows.patch
 
 %description
 vgabios is an LPGL implementation of a bios for a video card.
@@ -61,6 +63,7 @@ emulators. It is not intended for use in real cards.
 %patch10 -p1
 %patch11 -p1
 %patch12 -p1
+%patch13 -p1
 
 %build 
 make clean
@@ -95,6 +98,11 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Tue Feb 14 2017 Danilo Cesar Lemes de Paula <ddepaula@redhat.com> - 0.6b-3.7.el6
+- vgabios-Reorder-video-modes-to-work-around-a-Windows.patch [bz#1421574]
+- Resolves: bz#1421574
+  ([virtio-win][svvp][ws2016] cannot generate dump file when using nmi on ws2016)
+
 * Thu Nov 08 2012 Michal Novotny <minovotn@redhat.com> - vgabios-0.6b-3.7.el6
 - vgabios-Fix-get-video-mode-vgabios-call.patch [bz#840087]
 - Resolves: bz#840087
