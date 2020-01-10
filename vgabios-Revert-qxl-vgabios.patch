@@ -1,0 +1,112 @@
+From ed11f0a3deed929c5556886379917f58090c36c2 Mon Sep 17 00:00:00 2001
+From: Gerd Hoffmann <kraxel@redhat.com>
+Date: Mon, 22 Nov 2010 16:53:59 -0200
+Subject: [PATCH 1/7] Revert "qxl vgabios"
+
+RH-Author: Gerd Hoffmann <kraxel@redhat.com>
+Message-id: <1290444845-14392-2-git-send-email-kraxel@redhat.com>
+Patchwork-id: 13790
+O-Subject: [RHEL-6.1 vgabios PATCH 1/7] Revert "qxl vgabios"
+Bugzilla: 654639
+RH-Acked-by: Amit Shah <amit.shah@redhat.com>
+RH-Acked-by: Alex Williamson <alex.williamson@redhat.com>
+
+This reverts commit a454d2293d0da1082906a75397382dcd15bb074b.
+
+Will be replaced by patches merged upstream.
+
+Signed-off-by: Gerd Hoffmann <kraxel@redhat.com>
+---
+ Makefile  |   24 +-----------------------
+ vbe.c     |    4 ----
+ vgabios.c |    3 ---
+ 3 files changed, 1 insertions(+), 30 deletions(-)
+
+Signed-off-by: Eduardo Habkost <ehabkost@raisama.net>
+---
+ Makefile  |   24 +-----------------------
+ vbe.c     |    4 ----
+ vgabios.c |    3 ---
+ 3 files changed, 1 insertions(+), 30 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index d5725e1..00e8c66 100644
+--- a/Makefile
++++ b/Makefile
+@@ -14,15 +14,13 @@ RELVERS = `pwd | sed "s-.*/--" | sed "s/vgabios//" | sed "s/-//"`
+ 
+ VGABIOS_DATE = "-DVGABIOS_DATE=\"$(RELDATE)\""
+ 
+-all: bios cirrus-bios qxl-bios
++all: bios cirrus-bios
+ 
+ 
+ bios: biossums vgabios.bin vgabios.debug.bin
+ 
+ cirrus-bios: vgabios-cirrus.bin vgabios-cirrus.debug.bin
+ 
+-qxl-bios: vgabios-qxl.bin vgabios-qxl.debug.bin
+-
+ clean:
+ 	/bin/rm -f  biossums vbetables-gen vbetables.h *.o *.s *.ld86 \
+           temp.awk.* vgabios*.orig _vgabios_* _vgabios-debug_* core vgabios*.bin vgabios*.txt $(RELEASE).bin *.bak
+@@ -79,26 +77,6 @@ vgabios-cirrus.debug.bin: vgabios.c vgabios.h vgafonts.h vgatables.h clext.c
+ 	./biossums VGABIOS-lgpl-latest.cirrus.debug.bin
+ 	ls -l VGABIOS-lgpl-latest.cirrus.debug.bin
+ 
+-vgabios-qxl.bin: vgabios.c vgabios.h vgafonts.h vgatables.h vbe.h vbe.c vbetables.h
+-	$(GCC) -E -P vgabios.c $(VGABIOS_VERS) -DQXL -DVBE -DPCIBIOS $(VGABIOS_DATE) > _vgabios-qxl_.c
+-	$(BCC) -o vgabios-qxl.s -C-c -D__i86__ -S -0 _vgabios-qxl_.c
+-	sed -e 's/^\.text//' -e 's/^\.data//' vgabios-qxl.s > _vgabios-qxl_.s
+-	$(AS86) _vgabios-qxl_.s -b vgabios-qxl.bin -u -w- -g -0 -j -O -l vgabios.qxl.txt
+-	rm -f _vgabios-qxl_.s _vgabios-qxl_.c vgabios-qxl.s
+-	mv vgabios-qxl.bin VGABIOS-lgpl-latest.qxl.bin
+-	./biossums VGABIOS-lgpl-latest.qxl.bin
+-	ls -l VGABIOS-lgpl-latest.qxl.bin
+-
+-vgabios-qxl.debug.bin: vgabios.c vgabios.h vgafonts.h vgatables.h vbe.h vbe.c vbetables.h
+-	$(GCC) -E -P vgabios.c $(VGABIOS_VERS) -DQXL -DVBE -DPCIBIOS -DDEBUG $(VGABIOS_DATE) > _vgabios-qxl-debug_.c
+-	$(BCC) -o vgabios-qxl-debug.s -C-c -D__i86__ -S -0 _vgabios-qxl-debug_.c
+-	sed -e 's/^\.text//' -e 's/^\.data//' vgabios-qxl-debug.s > _vgabios-qxl-debug_.s
+-	$(AS86) _vgabios-qxl-debug_.s -b vgabios-qxl-debug.bin -u -w- -g -0 -j -O -l vgabios.qxl-debug.txt
+-	rm -f _vgabios-qxl-debug_.s _vgabios-qxl-debug_.c vgabios-qxl-debug.s
+-	mv vgabios-qxl-debug.bin VGABIOS-lgpl-latest.qxl.debug.bin
+-	./biossums VGABIOS-lgpl-latest.qxl.debug.bin
+-	ls -l VGABIOS-lgpl-latest.qxl.debug.bin
+-
+ biossums: biossums.c
+ 	$(CC) -o biossums biossums.c
+ 
+diff --git a/vbe.c b/vbe.c
+index 929987f..3bd4d43 100644
+--- a/vbe.c
++++ b/vbe.c
+@@ -910,11 +910,7 @@ Bit16u *AX;Bit16u CX; Bit16u ES;Bit16u DI;
+                 if (using_lfb) {
+                   info.NumberOfBanks = 1;
+                 }
+-#ifdef QXL
+-                lfb_addr = pci_get_lfb_addr(0x1b36); // Red Hat
+-#else
+                 lfb_addr = pci_get_lfb_addr(0x1234); // experimental vendor
+-#endif
+                 if (lfb_addr > 0) {
+                   info.PhysBasePtr = ((Bit32u)lfb_addr << 16);
+                 }
+diff --git a/vgabios.c b/vgabios.c
+index a6b0004..fbc3588 100644
+--- a/vgabios.c
++++ b/vgabios.c
+@@ -209,9 +209,6 @@ vgabios_pci_data:
+ #ifdef CIRRUS
+ .word 0x1013
+ .word 0x00b8 // CLGD5446
+-#elif QXL
+-.word 0x1b36
+-.word 0x0100
+ #else
+ #error "Unknown PCI vendor and device id"
+ #endif
+-- 
+1.7.3.2
+

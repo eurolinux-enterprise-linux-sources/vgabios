@@ -1,0 +1,76 @@
+From 61bbc8cf000df57992e21feed9ed0173b405d7f6 Mon Sep 17 00:00:00 2001
+From: Gerd Hoffmann <kraxel@redhat.com>
+Date: Mon, 22 Nov 2010 16:54:03 -0200
+Subject: [PATCH 5/7] update pci_get_lfb_addr for vmware vga
+
+RH-Author: Gerd Hoffmann <kraxel@redhat.com>
+Message-id: <1290444845-14392-6-git-send-email-kraxel@redhat.com>
+Patchwork-id: 13787
+O-Subject: [RHEL-6.1 vgabios PATCH 5/7] update pci_get_lfb_addr for vmware vga
+Bugzilla: 654639
+RH-Acked-by: Amit Shah <amit.shah@redhat.com>
+RH-Acked-by: Alex Williamson <alex.williamson@redhat.com>
+
+vmware vga has the framebuffer at pci region 1 not 0.  This patch makes
+pci_get_lfb_addr check region 1 too.  It also gives names to the
+numbered labels to make the code more readable.
+(cherry picked from commit 846780ebcad7a907383173bd2f4fcc4e520e4611)
+
+Signed-off-by: Gerd Hoffmann <kraxel@redhat.com>
+---
+ vgabios.c |   23 ++++++++++++++---------
+ 1 files changed, 14 insertions(+), 9 deletions(-)
+
+Signed-off-by: Eduardo Habkost <ehabkost@raisama.net>
+---
+ vgabios.c |   23 ++++++++++++++---------
+ 1 files changed, 14 insertions(+), 9 deletions(-)
+
+diff --git a/vgabios.c b/vgabios.c
+index b3a5cec..79c1002 100644
+--- a/vgabios.c
++++ b/vgabios.c
+@@ -3850,26 +3850,31 @@ _pci_get_lfb_addr:
+     mov dl, #0x00
+     call pci_read_reg
+     cmp ax, #0xffff
+-    jz pci_get_lfb_addr_5
+- pci_get_lfb_addr_3:
++    jz pci_get_lfb_addr_fail
++ pci_get_lfb_addr_next_dev:
+     mov dl, #0x00
+     call pci_read_reg
+     cmp ax, bx ;; check vendor
+-    jz pci_get_lfb_addr_4
++    jz pci_get_lfb_addr_found
+     add cx, #0x8
+     cmp cx, #0x200 ;; search bus #0 and #1
+-    jb pci_get_lfb_addr_3
+- pci_get_lfb_addr_5:
++    jb pci_get_lfb_addr_next_dev
++ pci_get_lfb_addr_fail:
+     xor dx, dx ;; no LFB
+-    jmp pci_get_lfb_addr_6
+- pci_get_lfb_addr_4:
++    jmp pci_get_lfb_addr_return
++ pci_get_lfb_addr_found:
+     mov dl, #0x10 ;; I/O space #0
+     call pci_read_reg
+     test ax, #0xfff1
+-    jnz pci_get_lfb_addr_5
++    jz pci_get_lfb_addr_success
++    mov dl, #0x14 ;; I/O space #1
++    call pci_read_reg
++    test ax, #0xfff1
++    jnz pci_get_lfb_addr_fail
++ pci_get_lfb_addr_success:
+     shr eax, #16
+     mov dx, ax ;; LFB address
+- pci_get_lfb_addr_6:
++ pci_get_lfb_addr_return:
+   pop eax
+   mov ax, dx
+   pop dx
+-- 
+1.7.3.2
+

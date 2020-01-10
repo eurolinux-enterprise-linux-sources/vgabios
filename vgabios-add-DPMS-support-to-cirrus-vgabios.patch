@@ -1,0 +1,91 @@
+From 30af9e61c75426dd9f8da5c1bf7b10a6c9c99da6 Mon Sep 17 00:00:00 2001
+From: Gleb Natapov <gleb@redhat.com>
+Date: Thu, 31 Mar 2011 12:44:10 -0300
+Subject: [PATCH] add DPMS support to cirrus vgabios
+
+RH-Author: Gleb Natapov <gleb@redhat.com>
+Message-id: <20110331124410.GS7766@redhat.com>
+Patchwork-id: 21033
+O-Subject: [PATCH VGABIOS RHEL6.1] add DPMS support to cirrus vgabios
+Bugzilla: 691344
+RH-Acked-by: john cooper <john.cooper@redhat.com>
+RH-Acked-by: Kevin Wolf <kwolf@redhat.com>
+RH-Acked-by: Glauber Costa <glommer@redhat.com>
+
+BZ: 691344
+
+(cherry picked from commit 6e62666cfc19e7fd45dd0d7c3ad62fd8d0b5f67a)
+
+Signed-off-by: Gleb Natapov <gleb@redhat.com>
+--
+			Gleb.
+
+Signed-off-by: Eduardo Habkost <ehabkost@raisama.net>
+---
+ clext.c |   36 ++++++++++++++++++++++++++++++++++--
+ 1 files changed, 34 insertions(+), 2 deletions(-)
+
+diff --git a/clext.c b/clext.c
+index 6dbd689..b0b6834 100644
+--- a/clext.c
++++ b/clext.c
+@@ -510,7 +510,7 @@ cirrus_vesa:
+ #ifdef CIRRUS_DEBUG
+   call cirrus_debug_dump
+ #endif
+-  cmp al, #0x0F
++  cmp al, #0x10
+   ja cirrus_vesa_not_handled
+   push bx
+   xor bx, bx
+@@ -1197,6 +1197,37 @@ cirrus_vesa_07h_2:
+   mov  ax, #0x004f
+   ret
+ 
++cirrus_vesa_10h:
++  cmp bl, #0x00
++  jne cirrus_vesa_10h_01
++  mov bx, #0x0f30
++  mov ax, #0x004f
++  ret
++cirrus_vesa_10h_01:
++  cmp bl, #0x01
++  jne cirrus_vesa_10h_02
++  push dx
++  push ds
++  mov dx, #0x40
++  mov ds, dx
++  mov [0xb9], bh
++  pop ds
++  pop dx
++  mov ax, #0x004f
++  ret
++cirrus_vesa_10h_02:
++  cmp bl, #0x02
++  jne cirrus_vesa_unimplemented
++  push dx
++  push ds
++  mov dx, #0x40
++  mov ds, dx
++  mov bh, [0xb9]
++  pop ds
++  pop dx
++  mov ax, #0x004f
++  ret
++
+ cirrus_vesa_unimplemented:
+   mov ax, #0x014F ;; not implemented
+   ret
+@@ -1565,7 +1596,8 @@ cirrus_vesa_handlers:
+   dw cirrus_vesa_unimplemented
+   dw cirrus_vesa_unimplemented
+   dw cirrus_vesa_unimplemented
+-
++  ;; 10h
++  dw cirrus_vesa_10h
+ 
+ 
+ ASM_END
+-- 
+1.7.3.2
+

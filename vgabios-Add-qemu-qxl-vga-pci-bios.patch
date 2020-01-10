@@ -1,0 +1,79 @@
+From 899cd2685f8da251ae8b8d23d5fd0b8c7c270d93 Mon Sep 17 00:00:00 2001
+From: Gerd Hoffmann <kraxel@redhat.com>
+Date: Mon, 22 Nov 2010 16:54:05 -0200
+Subject: [PATCH 7/7] Add qemu qxl vga pci bios
+
+RH-Author: Gerd Hoffmann <kraxel@redhat.com>
+Message-id: <1290444845-14392-8-git-send-email-kraxel@redhat.com>
+Patchwork-id: 13792
+O-Subject: [RHEL-6.1 vgabios PATCH 7/7] Add qemu qxl vga pci bios
+Bugzilla: 654639
+RH-Acked-by: Amit Shah <amit.shah@redhat.com>
+RH-Acked-by: Alex Williamson <alex.williamson@redhat.com>
+
+Add PCI vgabios for the qemu qxl vga (1b36:0100).
+Name it vgabios-qxl.bin.
+(cherry picked from commit 19ea12c230ded95928ecaef0db47a82231c2e485)
+
+Signed-off-by: Gerd Hoffmann <kraxel@redhat.com>
+---
+ Makefile |   10 +++++++++-
+ 1 files changed, 9 insertions(+), 1 deletions(-)
+
+Signed-off-by: Eduardo Habkost <ehabkost@raisama.net>
+---
+ Makefile |   10 +++++++++-
+ 1 files changed, 9 insertions(+), 1 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 2a093e8..578721a 100644
+--- a/Makefile
++++ b/Makefile
+@@ -14,7 +14,7 @@ RELVERS = `pwd | sed "s-.*/--" | sed "s/vgabios//" | sed "s/-//"`
+ 
+ VGABIOS_DATE = "-DVGABIOS_DATE=\"$(RELDATE)\""
+ 
+-all: bios cirrus-bios stdvga-bios vmware-bios
++all: bios cirrus-bios stdvga-bios vmware-bios qxl-bios
+ 
+ bios: vgabios.bin vgabios.debug.bin
+ 
+@@ -24,6 +24,8 @@ stdvga-bios: vgabios-stdvga.bin vgabios-stdvga.debug.bin
+ 
+ vmware-bios: vgabios-vmware.bin vgabios-vmware.debug.bin
+ 
++qxl-bios: vgabios-qxl.bin vgabios-qxl.debug.bin
++
+ clean:
+ 	/bin/rm -f  biossums vbetables-gen vbetables.h *.o *.s *.ld86 \
+           temp.awk.* vgabios*.orig _vgabios_* _vgabios-debug_* core vgabios*.bin vgabios*.txt $(RELEASE).bin *.bak
+@@ -43,6 +45,8 @@ vgabios-stdvga.bin       : VGAFLAGS := -DVBE -DPCIBIOS -DPCI_VID=0x1234 -DPCI_DI
+ vgabios-stdvga.debug.bin : VGAFLAGS := -DVBE -DPCIBIOS -DPCI_VID=0x1234 -DPCI_DID=0x1111 -DDEBUG
+ vgabios-vmware.bin       : VGAFLAGS := -DVBE -DPCIBIOS -DPCI_VID=0x15ad -DPCI_DID=0x0405
+ vgabios-vmware.debug.bin : VGAFLAGS := -DVBE -DPCIBIOS -DPCI_VID=0x15ad -DPCI_DID=0x0405 -DDEBUG
++vgabios-qxl.bin          : VGAFLAGS := -DVBE -DPCIBIOS -DPCI_VID=0x1b36 -DPCI_DID=0x0100
++vgabios-qxl.debug.bin    : VGAFLAGS := -DVBE -DPCIBIOS -DPCI_VID=0x1b36 -DPCI_DID=0x0100 -DDEBUG
+ 
+ # dist names
+ vgabios.bin              : DISTNAME := VGABIOS-lgpl-latest.bin
+@@ -53,6 +57,8 @@ vgabios-stdvga.bin       : DISTNAME := VGABIOS-lgpl-latest.stdvga.bin
+ vgabios-stdvga.debug.bin : DISTNAME := VGABIOS-lgpl-latest.stdvga.debug.bin
+ vgabios-vmware.bin       : DISTNAME := VGABIOS-lgpl-latest.vmware.bin
+ vgabios-vmware.debug.bin : DISTNAME := VGABIOS-lgpl-latest.vmware.debug.bin
++vgabios-qxl.bin          : DISTNAME := VGABIOS-lgpl-latest.qxl.bin
++vgabios-qxl.debug.bin    : DISTNAME := VGABIOS-lgpl-latest.qxl.debug.bin
+ 
+ # dependencies
+ vgabios.bin              : $(VGA_FILES) $(VBE_FILES) biossums
+@@ -63,6 +69,8 @@ vgabios-stdvga.bin       : $(VGA_FILES) $(VBE_FILES) biossums
+ vgabios-stdvga.debug.bin : $(VGA_FILES) $(VBE_FILES) biossums
+ vgabios-vmware.bin       : $(VGA_FILES) $(VBE_FILES) biossums
+ vgabios-vmware.debug.bin : $(VGA_FILES) $(VBE_FILES) biossums
++vgabios-qxl.bin          : $(VGA_FILES) $(VBE_FILES) biossums
++vgabios-qxl.debug.bin    : $(VGA_FILES) $(VBE_FILES) biossums
+ 
+ # build rule
+ %.bin:
+-- 
+1.7.3.2
+
