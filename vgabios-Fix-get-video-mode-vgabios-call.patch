@@ -1,0 +1,71 @@
+From fc54b421ef216fac7f60b301c9d955f6aae84e2a Mon Sep 17 00:00:00 2001
+Message-Id: <fc54b421ef216fac7f60b301c9d955f6aae84e2a.1352387814.git.minovotn@redhat.com>
+From: Gerd Hoffmann <kraxel@redhat.com>
+Date: Wed, 17 Oct 2012 06:55:17 +0200
+Subject: [PATCH] Fix "get video mode" vgabios call.
+
+RH-Author: Gerd Hoffmann <kraxel@redhat.com>
+Message-id: <1350456917-24584-1-git-send-email-kraxel@redhat.com>
+Patchwork-id: 43298
+O-Subject: [RHEL-6.4 vgabios PATCH] Fix "get video mode" vgabios call.
+Bugzilla: 840087
+RH-Acked-by: Markus Armbruster <armbru@redhat.com>
+RH-Acked-by: Hans de Goede <hdegoede@redhat.com>
+RH-Acked-by: Paolo Bonzini <pbonzini@redhat.com>
+
+vgabios has two variables for the current video mode:
+
+BIOSMEM_CURRENT_MODE holds the vga mode number and is used+maintained
+by the vga code.
+
+BIOSMEM_VBE_MODE holds the vesa 2.0 extension graphical video mode and
+is maintained by the bochs dispi vbe code.
+
+Querying the current video mode using VESA bios calls works fine:  The
+VBE code checks whenever VBE is enabled or not, then either returns
+BIOSMEM_VBE_MODE or BIOSMEM_CURRENT_MODE.
+
+Querying the curret video mode using VGA bios calls will return
+BIOSMEM_CURRENT_MODE, even if VBE is enabled.
+
+This leads to syslinux misbehaving with the graphical menu active:  When
+booting the kernel syslinux thinks the vga is in standard 80x25 text mode
+but it actually still is in VBE graphics mode.  syslinux passes text
+mode parameters to the linux kernel which in turn activates vga text
+mode console, but the console isn't visible due to the vga actually
+being in graphics mode.
+
+Fix this by making VBE set-mode calls also fill BIOSMEM_CURRENT_MODE.
+Note that BIOSMEM_CURRENT_MODE is a 8-bit value whereas BIOSMEM_VBE_MODE
+is 16-bit.  VESA modes start with 0x100, i.e. they all can't be
+represented as 8-bit value.  So go use the maximum 8-bit value we have
+instead: 0xff.  SeaVGABIOS does the same.
+
+bugzilla: #840087 - unable to boot rhev-hypervisor6.iso in virtual
+                    machine for testing
+
+Signed-off-by: Gerd Hoffmann <kraxel@redhat.com>
+---
+ vbe.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+Signed-off-by: Michal Novotny <minovotn@redhat.com>
+---
+ vbe.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/vbe.c b/vbe.c
+index af9de66..0848ce6 100644
+--- a/vbe.c
++++ b/vbe.c
+@@ -1012,6 +1012,7 @@ Bit16u *AX;Bit16u BX; Bit16u ES;Bit16u DI;
+                 vga_compat_setup();
+ 
+                 write_word(BIOSMEM_SEG,BIOSMEM_VBE_MODE,BX);
++                write_byte(BIOSMEM_SEG,BIOSMEM_CURRENT_MODE,0xff);
+                 write_byte(BIOSMEM_SEG,BIOSMEM_VIDEO_CTL,(0x60 | no_clear));
+ 
+                 result = 0x4f;                  
+-- 
+1.7.11.7
+

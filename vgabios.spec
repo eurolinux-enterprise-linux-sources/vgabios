@@ -1,6 +1,6 @@
 Name:		vgabios
 Version:	0.6b
-Release:	3.6%{?dist}
+Release:	3.7%{?dist}
 Summary:	LGPL implementation of a vga video bios
 
 Group:		Applications/Emulators		
@@ -38,6 +38,8 @@ Patch9: vgabios-Add-qemu-vmware-vga-pci-bios.patch
 Patch10: vgabios-Add-qemu-qxl-vga-pci-bios.patch
 # For bz#691344 - vgabios is missing DPMS support (for S3 support for Win guests)
 Patch11: vgabios-add-DPMS-support-to-cirrus-vgabios.patch
+# For bz#840087 - Unable to boot rhev-hypervisor6.iso in virtual machine for testing.
+Patch12: vgabios-Fix-get-video-mode-vgabios-call.patch
 
 %description
 vgabios is an LPGL implementation of a bios for a video card.
@@ -58,6 +60,7 @@ emulators. It is not intended for use in real cards.
 %patch9 -p1
 %patch10 -p1
 %patch11 -p1
+%patch12 -p1
 
 %build 
 make clean
@@ -92,6 +95,11 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
+* Thu Nov 08 2012 Michal Novotny <minovotn@redhat.com> - vgabios-0.6b-3.7.el6
+- vgabios-Fix-get-video-mode-vgabios-call.patch [bz#840087]
+- Resolves: bz#840087
+  (Unable to boot rhev-hypervisor6.iso in virtual machine for testing.)
+
 * Tue Apr 12 2011 Eduardo Habkost <ehabkost@redhat.com> - vgabios-0.6b-3.6.el6
 - vgabios-add-DPMS-support-to-cirrus-vgabios.patch [bz#691344]
 - Resolves: bz#691344
