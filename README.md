@@ -1,3 +1,4 @@
-# ELS - Enterprise Linux/EuroLinux Sources - vgabios 
+# ELS - Enterprise Linux/EuroLinux Sources - vgabios
+ 
 ## Usage:
   Checkout branch or tag.
